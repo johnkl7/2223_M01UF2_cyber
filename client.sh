@@ -1,9 +1,28 @@
 #!/bin/bash
+
+if [ "$1" == "-h" ]
+then
+	SCRIPT=`basename $0` #LIMPIA Y DEJA SOLO EL NOMBRE DEL SCRIPT YA QUE VARIABLE $0 TE DICE LA RUTA
+	
+	echo "Ejemplo de uso"
+	echo " $SCRIPT 127.0.0.1"
+	exit 0 #acabamos sin ningun error marcado
+fi
+
+
 IP_SERVER="localhost"
-IP_LOCAL="127.0.0.1"
+IP_LOCAL=`ip address | grep -i inet | grep enp0s3 | sed "s/^ *//g" | cut -d " " -f 2 | cut -d "/" -f 1`
 
 PORT="4242"
 
+echo "La IP LOCAL: $IP_LOCAL"
+
+
+if [ "$1" != "" ]
+then
+	IP_SERVER=$1
+	echo "IP del servidor: $IP_SERVER"
+fi
 
 echo "Cliente HMTP"
 
@@ -29,9 +48,16 @@ fi
 
 echo "Seguimos"
 
+echo "enviadno numero de archivos"
+
+MEMESWC=`echo | ls memes | wc -l`
+echo "$MEMESWC" | nc $IP_SERVER $PORT
+
+for archivo in memes/*
+do
 echo "(5) SEND - Enviamos el nombre de archivo"
 
-FILE_NAME="elon_musk.jpg"
+FILE_NAME=`echo $archivo | cut -d "/" -f 2`
 
 FILE_MD5=`echo $FILE_NAME | md5sum | cut -d " " -f 1`
 
@@ -40,7 +66,6 @@ echo "FILE_NAME $FILE_NAME $FILE_MD5" | nc $IP_SERVER $PORT
 echo "(6) LISTEN - Confirmación nombre archivo"
 
 MSG=`nc -l $PORT`
-
 
 if [ "$MSG" != "OK_FILE_NAME" ]
 then
@@ -74,7 +99,7 @@ echo "ERROR 4: MD5 incorrecto"
 echo "Mensaje de error: $MSG"
 exit 4
 fi
-
+done
 
 echo "Fin del envio"
 

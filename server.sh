@@ -1,5 +1,8 @@
 #!/bin/bash
 
+IP_LOCAL=`ip address | grep -i inet | grep enp0s3 | sed "s/^ *//g" | cut -d " " -f 2 | cut -d "/" -f 1`
+echo $IP_LOCAL
+
 echo "Servidor HMTP"
 
 echo "(0) LISTEN - Levantando el servidor"
@@ -27,11 +30,17 @@ fi
  	 echo "OK_HMTP" | nc $IP_CLIENT $PORT
 
 
+echo " escuchando el numero de archivos"
+MSG=`nc -l $PORT`
+CONTADOR=`echo $MSG`
+
+for NUM in `seq $CONTADOR`
+do
 echo "(4) LISTEN - Escuchando el nombre de archivo"
 
 MSG=`nc -l $PORT`
 
-echo $MSG
+echo "$MSG"
 
 PREFIX=`echo $MSG | cut -d " " -f 1`
 NOMBRE=`echo $MSG | cut -d " " -f 2`
@@ -74,7 +83,7 @@ echo "KO_MD5_PREFIX" | nc $IP_CLIENT $PORT
 exit 4
 fi
 
-FILE_MD5=`cat inbox/elon_musk.jpg | md5sum | cut -d " " -f 1`
+FILE_MD5=`cat inbox/$NOMBRE | md5sum | cut -d " " -f 1`
 
 if [ "$DATA_MD5" != "$FILE_MD5" ]
 then
@@ -83,10 +92,9 @@ exit 5
 fi
 
 echo "OK_DATA_MD5" | nc $IP_CLIENT $PORT
-
+done
 echo "Fin de la recepcion"
 
 
 exit 0
-
 
